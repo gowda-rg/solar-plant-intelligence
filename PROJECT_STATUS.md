@@ -1,51 +1,38 @@
 # Project Status — Solar Plant Intelligence
 
-**Last updated:** 2026-10-30  
-**Objective:** Working end-to-end solar plant intelligence MVP  
-**Timeline:** 3-day target (7-day maximum for polish)
+**Last updated:** 2026-10-31  
 
 ## Current phase
 
-**Phase 1 — Backend foundation:** API skeleton, database connectivity, health checks (complete). Next: schema and ingest.
+**Phase 2 complete** — schema, synthetic seed, `/telemetry/summary`.  
+**Next:** Phase 3 — `ml/train_forecast.py` (chronological split, metrics JSON).
 
-## Completed
+## Reproduce and verify (by phase)
 
-- [x] Architecture and repository scaffold
-- [x] Development environment surveyed (Python 3.10, Node 24, Git)
-- [x] PostgreSQL provisioned locally
-- [x] Backend `backend/.env` configured
-- [x] Backend health and database connectivity verified (`pytest backend/tests/test_health.py`)
-- [x] Private planning documents removed from this repository (local copies only)
-- [ ] Changes pushed to GitHub
+All commands assume `cd backend` and `backend/.env` is set.
 
-## System state
+| Phase | What you prove | Run | Where to check |
+|-------|----------------|-----|----------------|
+| **1** | API reaches PostgreSQL | `PYTHONPATH=. python3 -m pytest tests/test_health.py -q` | Tests pass; or `uvicorn app.main:app --reload --port 8000` → `/health/db` |
+| **2a** | Tables exist | `PYTHONPATH=. python3 scripts/init_db.py` | `psql` → `\dt` shows `plant_readings`, `quality_events` |
+| **2b** | Demo data loaded | `PYTHONPATH=. python3 scripts/seed_demo_data.py` | Terminal: `Inserted 336 readings…` or `Skip seed` if already loaded |
+| **2c–d** | Read path works | `PYTHONPATH=. python3 -m pytest tests/ -q` | `/telemetry/summary` → `reading_count` ≈ 336, `SYNTHETIC_DEMO` |
+| **3** | *(planned)* | `ml/train_forecast.py` | `ml/artifacts/metrics.json` + new API routes |
+| **4** | *(planned)* | `frontend/` dev server | Charts match API JSON |
 
-| Component | Status |
-|-----------|--------|
-| Backend (FastAPI) | Health + DB connectivity working |
-| Database (PostgreSQL) | Running locally |
-| ML pipeline (scikit-learn) | Not started |
-| Frontend (React) | Not started |
-| Automated tests | Health endpoints (pytest) |
+**Master map in code:** open `backend/scripts/seed_demo_data.py` — top **PROJECT WORKFLOW MAP** block links every file and check.
 
-## Approved decisions
+**Reset demo data (optional):** in psql, `TRUNCATE quality_events, plant_readings;` then re-run seed script.
 
-- Local-only development (no cloud auth or paid services for MVP)
-- Monorepo layout: `backend/`, `frontend/`, `ml/`, `data/`, `scripts/`, `docs/`
-- Private planning material stays outside this git repository (local workspace only)
+## Reading order (slow walkthrough)
 
-## Open decisions
-
-- [ ] Primary dataset: public PV/weather time series vs. documented synthetic demo data
-- [ ] Baseline forecasting model (e.g., gradient boosting with lag and irradiance features)
-
-## Risks
-
-- Feature engineering and leakage-safe validation often dominate early schedule
-- Scope must stay MVP-sized (no SCADA/OPC UA in v1)
+1. `scripts/seed_demo_data.py` (workflow map + ingest story)  
+2. `scripts/init_db.py` → `app/models/plant_reading.py`  
+3. `app/services/quality.py` → `app/api/telemetry.py` → `app/main.py`  
+4. `app/database.py` + `app/config.py` when tracing connections  
 
 ## Next actions
 
-1. Choose dataset and document provenance in `data/README.md`  
-2. Define SQLAlchemy models and migration for telemetry  
-3. Implement ingest script and quality rules  
+1. Add `ml/train_forecast.py` with the same WORKFLOW header style  
+2. API routes for forecast + metrics artifact  
+3. React dashboard (Phase 4)  

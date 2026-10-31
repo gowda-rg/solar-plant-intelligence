@@ -62,8 +62,17 @@ PYTHONPATH=. uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
 
 - `GET /health` — process up  
 - `GET /health/db` — PostgreSQL reachable via `DATABASE_URL` in `backend/.env`  
+- `GET /telemetry/summary` — row counts and data source labels (after seed)
 
-See `docs/DEV_NOTES.md` for what each milestone means in the data flow.
+### Database setup
+
+```bash
+cd backend
+PYTHONPATH=. python scripts/init_db.py
+PYTHONPATH=. python scripts/seed_demo_data.py   # optional SYNTHETIC_DEMO rows
+```
+
+Read `SEMANTIC` comment blocks at the top of modules under `backend/app/` when tracing the flow.
 
 ## License
 

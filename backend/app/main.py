@@ -1,5 +1,16 @@
+# =============================================================================
+# WORKFLOW — Phase 1 + route registration
+# =============================================================================
+# Phase 1 endpoints: /health (process only), /health/db (PostgreSQL via database.py)
+# Phase 2 routes:    telemetry_router from app/api/telemetry.py
+#
+# RUN:    cd backend && PYTHONPATH=. uvicorn app.main:app --reload --port 8000
+# CHECK:  /docs for all routes; exercise each tab after running init_db + seed scripts
+# MAP:    Full phase list in scripts/seed_demo_data.py header
+# =============================================================================
 from fastapi import FastAPI, HTTPException
 
+from app.api.telemetry import router as telemetry_router
 from app.database import check_database_connection
 
 app = FastAPI(
@@ -8,14 +19,18 @@ app = FastAPI(
     version="0.1.0",
 )
 
+app.include_router(telemetry_router)
+
 
 @app.get("/health")
 def health():
+    # Phase 1 — does not use the database
     return {"status": "ok"}
 
 
 @app.get("/health/db")
 def health_db():
+    # Phase 1 — same connection path as pytest test_health_db
     try:
         check_database_connection()
     except Exception as exc:
