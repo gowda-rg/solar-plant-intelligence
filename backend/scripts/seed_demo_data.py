@@ -29,13 +29,19 @@
 #   Re-run seed from scratch (only when learning / debugging ingest):
 #     TRUNCATE quality_events, plant_readings; then run this script again.
 #
-# Phase 3 — Forecasting (next build step — not in repo yet)
-#   Planned: ml/train_forecast.py → ml/artifacts/metrics.json → API → frontend/
-#   Reproduce steps will live in that script header when added.
+# Phase 3 — Forecasting (offline train → JSON artifacts → API)
+#   Order:  ml/train_forecast.py          (step 3a — chronological fit, writes ml/artifacts/)
+#           app/services/forecast_artifacts.py
+#           app/api/forecast.py           (step 3b — GET /forecast/metrics, /forecast/evaluation)
+#   Run:    cd backend && PYTHONPATH=. python3 ../ml/train_forecast.py
+#   Check:  cat ../ml/artifacts/metrics.json
+#           curl http://127.0.0.1:8000/forecast/metrics
 #
 # Phase 4 — Dashboard (after Phase 3)
-#   Planned: frontend/ calls API; charts show only backend JSON (traceable numbers).
-# =============================================================================
+#   Files:  frontend/src/App.tsx (workflow map), src/api/client.ts, Recharts chart
+#   Run:    cd frontend && npm install && npm run dev  (backend uvicorn on :8000)
+#   Check:  http://127.0.0.1:5173 — banner, metrics cards, actual vs predicted chart
+#
 #
 # THIS SCRIPT — INPUT / OUTPUT / LABEL
 #   INPUT:   Nothing on disk; readings built in memory (see build_readings).
@@ -77,7 +83,7 @@ from app.models import PlantReading, QualityEvent  # noqa: E402
 # Import the validation service.
 # It checks the generated readings against the application's
 # predefined data quality rules.
-from app.services.quality import validate_batch  # noqa: E402
+from app.services.quality import validate_batch, scan_reading_series  # noqa: E402
 
 
 # Identify all generated records as synthetic demonstration data.
@@ -200,6 +206,28 @@ def build_readings() -> list[PlantReading]:
     return readings
 
 
+def inject_demo_defects(readings: list[PlantReading]) -> None:
+    """
+    Introduce intentional gap + flatline so series quality rules fire in the demo.
+    Mutates the list in place (removes two consecutive hours; flatlines three daylight hours).
+    """
+    ordered = sorted(readings, key=lambda r: r.measured_at)
+    if len(ordered) < 48:
+        return
+
+    drop_ts = {
+        ordered[len(ordered) // 2].measured_at,
+        ordered[len(ordered) // 2 + 1].measured_at,
+    }
+    readings[:] = [r for r in readings if r.measured_at not in drop_ts]
+
+    # Flatline during daylight — frozen sensor pattern (3 identical hourly samples)
+    daylight = [r for r in ordered if 8 <= r.measured_at.hour <= 16 and r.power_kw > 0.5]
+    if len(daylight) >= 3:
+        for r in daylight[10:13]:
+            r.power_kw = 3.85
+
+
 def main() -> None:
     """
     Main execution function.
@@ -239,16 +267,10 @@ def main() -> None:
 
         # Generate two weeks of synthetic hourly solar measurements.
         readings = build_readings()
+        inject_demo_defects(readings)
 
-        # Send the generated readings through the application's
-        # data quality validation service.
-        #
-        # The validation service checks whether the readings
-        # satisfy the predefined quality rules.
-        #
-        # If any rules are triggered, corresponding QualityEvent
-        # records are returned.
         events = validate_batch(session, readings)
+        events.extend(scan_reading_series(readings))
 
         # Add all generated solar readings to the database session.
         session.add_all(readings)

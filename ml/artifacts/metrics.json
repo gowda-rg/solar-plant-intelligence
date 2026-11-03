@@ -1,0 +1,30 @@
+{
+  "generated_at": "2026-11-03T06:15:22.632424+00:00",
+  "model": "GradientBoostingRegressor",
+  "target": "power_kw",
+  "features": [
+    "hour_sin",
+    "hour_cos",
+    "irradiance_wm2",
+    "power_kw_lag_1",
+    "power_kw_lag_24"
+  ],
+  "train_rows": 263,
+  "test_rows": 66,
+  "train_fraction": 0.8,
+  "split_at_measured": "2026-10-31T15:00:00+00:00",
+  "data_sources": [
+    "MEASURED_CSV",
+    "SYNTHETIC_DEMO"
+  ],
+  "metrics": {
+    "mae_kw": 0.0765,
+    "rmse_kw": 0.2545,
+    "wape_percent": 4.1952
+  },
+  "notes": [
+    "Chronological train/test split; no random shuffle.",
+    "Metrics computed on held-out test period only.",
+    "Synthetic demo data \u2014 not industrial forecast accuracy."
+  ]
+}

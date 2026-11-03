@@ -1,0 +1,50 @@
+{
+  "note": "Daily sums on held-out test period only.",
+  "days": [
+    {
+      "day": "2026-11-01",
+      "actual_kwh": 53.636,
+      "predicted_kwh": 55.6,
+      "deviation_kwh": -1.964,
+      "deviation_pct": -3.53,
+      "mean_abs_residual_kw": 0.1022,
+      "summary": "Actual energy was 3.5% below forecast (-1.96 kWh delta). Review weather, curtailment, or data quality on this day \u2014 not a confirmed equipment fault."
+    },
+    {
+      "day": "2099-06-15",
+      "actual_kwh": 5.6,
+      "predicted_kwh": 7.53,
+      "deviation_kwh": -1.93,
+      "deviation_pct": -25.63,
+      "mean_abs_residual_kw": 0.9648,
+      "summary": "Actual energy was 25.6% below forecast (-1.93 kWh delta). Review weather, curtailment, or data quality on this day \u2014 not a confirmed equipment fault."
+    },
+    {
+      "day": "2026-11-02",
+      "actual_kwh": 47.849,
+      "predicted_kwh": 48.25,
+      "deviation_kwh": -0.402,
+      "deviation_pct": -0.83,
+      "mean_abs_residual_kw": 0.017,
+      "summary": "Actual energy was 0.8% below forecast (-0.40 kWh delta). Review weather, curtailment, or data quality on this day \u2014 not a confirmed equipment fault."
+    },
+    {
+      "day": "2026-10-31",
+      "actual_kwh": 13.334,
+      "predicted_kwh": 13.365,
+      "deviation_kwh": -0.032,
+      "deviation_pct": -0.24,
+      "mean_abs_residual_kw": 0.0061,
+      "summary": "Actual energy was 0.2% below forecast (-0.03 kWh delta). Review weather, curtailment, or data quality on this day \u2014 not a confirmed equipment fault."
+    },
+    {
+      "day": "2026-11-03",
+      "actual_kwh": 0.0,
+      "predicted_kwh": 0.004,
+      "deviation_kwh": -0.004,
+      "deviation_pct": -100.0,
+      "mean_abs_residual_kw": 0.0007,
+      "summary": "Actual energy was 100.0% below forecast (-0.00 kWh delta). Review weather, curtailment, or data quality on this day \u2014 not a confirmed equipment fault."
+    }
+  ]
+}

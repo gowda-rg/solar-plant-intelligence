@@ -1,38 +1,56 @@
 # Project Status — Solar Plant Intelligence
 
-**Last updated:** 2026-10-31  
+**Last updated:** 2026-11-03  
 
 ## Current phase
 
-**Phase 2 complete** — schema, synthetic seed, `/telemetry/summary`.  
-**Next:** Phase 3 — `ml/train_forecast.py` (chronological split, metrics JSON).
+**MVP+** — quality gap/stale detection, daily forecast deviation narratives, CSV ingest path, UI panels.
 
-## Reproduce and verify (by phase)
+## Refresh demo after these changes (important)
 
-All commands assume `cd backend` and `backend/.env` is set.
+Existing DB may lack injected defects and old artifacts lack `daily_deviations.json`:
 
-| Phase | What you prove | Run | Where to check |
-|-------|----------------|-----|----------------|
-| **1** | API reaches PostgreSQL | `PYTHONPATH=. python3 -m pytest tests/test_health.py -q` | Tests pass; or `uvicorn app.main:app --reload --port 8000` → `/health/db` |
-| **2a** | Tables exist | `PYTHONPATH=. python3 scripts/init_db.py` | `psql` → `\dt` shows `plant_readings`, `quality_events` |
-| **2b** | Demo data loaded | `PYTHONPATH=. python3 scripts/seed_demo_data.py` | Terminal: `Inserted 336 readings…` or `Skip seed` if already loaded |
-| **2c–d** | Read path works | `PYTHONPATH=. python3 -m pytest tests/ -q` | `/telemetry/summary` → `reading_count` ≈ 336, `SYNTHETIC_DEMO` |
-| **3** | *(planned)* | `ml/train_forecast.py` | `ml/artifacts/metrics.json` + new API routes |
-| **4** | *(planned)* | `frontend/` dev server | Charts match API JSON |
+```bash
+cd backend
+# psql or SQL: TRUNCATE quality_events, plant_readings;
+PYTHONPATH=. python3 scripts/seed_demo_data.py
+PYTHONPATH=. python3 ../ml/train_forecast.py
+PYTHONPATH=. python3 scripts/rescan_quality.py   # only if you did NOT reseed but want events
+PYTHONPATH=. python3 -m pytest tests/ -q
+```
 
-**Master map in code:** open `backend/scripts/seed_demo_data.py` — top **PROJECT WORKFLOW MAP** block links every file and check.
+Optional measured CSV (small example in repo):
 
-**Reset demo data (optional):** in psql, `TRUNCATE quality_events, plant_readings;` then re-run seed script.
+```bash
+PYTHONPATH=. python3 scripts/ingest_csv.py ../data/raw/example_plant_export.csv
+```
 
-## Reading order (slow walkthrough)
+## Full stack run
 
-1. `scripts/seed_demo_data.py` (workflow map + ingest story)  
-2. `scripts/init_db.py` → `app/models/plant_reading.py`  
-3. `app/services/quality.py` → `app/api/telemetry.py` → `app/main.py`  
-4. `app/database.py` + `app/config.py` when tracing connections  
+```bash
+# backend + train (above), then:
+PYTHONPATH=. uvicorn app.main:app --reload --port 8000
+cd ../frontend && npm run dev
+```
 
-## Next actions
+## New endpoints / UI
 
-1. Add `ml/train_forecast.py` with the same WORKFLOW header style  
-2. API routes for forecast + metrics artifact  
-3. React dashboard (Phase 4)  
+| Piece | Check |
+|-------|--------|
+| `GET /telemetry/quality-events` | UI “Data quality events” panel |
+| `GET /forecast/deviations` | UI “Day-level forecast deviation” |
+| `ml/artifacts/daily_deviations.json` | Matches API |
+| `scripts/ingest_csv.py` | Adds `MEASURED_CSV` source |
+
+| `POST /telemetry/ingest-csv` | Engineering lab — skips duplicate timestamps |
+| `POST /telemetry/quality/rescan` | Engineering lab — Re-scan quality |
+| Pipeline inspection (on demand) | `frontend/src/components/PipelineInspect.tsx` |
+
+Demo walkthrough (text + mermaid, no recording): `docs/DEMO_FLOW.md`
+
+## Walkthrough beats (technical)
+
+1. Ingest + **series** quality (gap, stale) — not confirmed faults  
+2. Chronological ML + **daily deviation copy** for operators  
+3. Optional **CSV ingest** with separate `data_source` label (duplicates skipped)  
+4. Operator-first UI; optional pipeline inspection and engineering lab actions  

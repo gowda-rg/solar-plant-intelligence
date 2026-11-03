@@ -26,6 +26,7 @@ ml/artifacts/*.joblib
 # Data (keep README; ignore large downloads unless explicitly versioned)
 data/raw/*
 !data/raw/.gitkeep
+!data/raw/example_plant_export.csv
 data/processed/*
 !data/processed/.gitkeep
 

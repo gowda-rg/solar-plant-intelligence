@@ -10,6 +10,9 @@ Concise record of technical choices and rationale.
 | 2026-10-31 | Demo data `SYNTHETIC_DEMO` via seed script | Unblocks ingest/API/ML without external downloads; clearly labeled | Public CSV only (deferred) |
 | 2026-10-31 | Learning notes in source as `SEMANTIC` comments | Inspect code while stepping through the system | Separate doc-only dev journals |
 
+| 2026-11-03 | GradientBoostingRegressor + lag/irradiance features | Nonlinear baseline; chronological 80/20 split | Ridge (linear only) |
+| 2026-11-03 | Metrics in `ml/artifacts/metrics.json` | API reads file; numbers trace to train script | Recompute metrics in API (would hide methodology) |
+
 ## Pending
 
 - Dataset selection and citation URL  
